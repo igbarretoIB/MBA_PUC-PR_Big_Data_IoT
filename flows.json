@@ -1,0 +1,250 @@
+[
+    {
+        "id": "f862a01cc17cd9bf",
+        "type": "tab",
+        "label": "Fluxo 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "592423cd70a57ad2",
+        "type": "http in",
+        "z": "f862a01cc17cd9bf",
+        "name": "",
+        "url": "/sensoresib",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 200,
+        "y": 160,
+        "wires": [
+            [
+                "28a84479cbda7672",
+                "4e330f1b610f4841",
+                "f3e774596c076f0b"
+            ]
+        ]
+    },
+    {
+        "id": "f3e774596c076f0b",
+        "type": "function",
+        "z": "f862a01cc17cd9bf",
+        "name": "Processar dados do post",
+        "func": "// Função para mapear o valor de uma faixa para outra\nfunction mapValue(value, in_min, in_max, out_min, out_max) {\n    return ((value - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min;\n}\n\nlet dataConfig = msg.payload.data_config;\nlet dataSensores = msg.payload.data_sensores;\nlet baseSensorDigital = msg.payload.BASE_SENSOR_DIGITAL;\n\n// Variáveis de saída\nlet umidadeSolo, temperaturaSolo, pHSolo, nivelNutrientes, radiacaoSolar, umidadeRelativa, temperaturaAmbiente, vazao;\n\nfor (let i = 0; i < dataConfig.length; i++) {\n    let sensorConfig = dataConfig[i];\n    let sensorData = dataSensores[i];\n    let sensor = sensorConfig.sensor;\n    let valorAD = sensorData[\"Conversor AD\"];\n    let inMin = sensorConfig.Entrada_minima;\n    let inMax = sensorConfig.Entrada_maxima;\n    let outMin = 0;\n    let outMax = baseSensorDigital;\n\n    switch (sensor) {\n        case \"Umidade_do_solo\":\n            umidadeSolo = parseFloat(mapValue(valorAD, outMin, outMax, inMin, inMax).toFixed(2));\n            break;\n        case \"Temperatura_do_solo\":\n            temperaturaSolo = parseFloat(mapValue(valorAD, outMin, outMax, inMin, inMax).toFixed(2));\n            break;\n        case \"pH_do_solo\":\n            pHSolo = parseFloat(mapValue(valorAD, outMin, outMax, inMin, inMax).toFixed(2));\n            break;\n        case \"Nivel_de_nutrientes\":\n            nivelNutrientes = parseFloat(mapValue(valorAD, outMin, outMax, inMin, inMax).toFixed(2));\n            break;\n        case \"Radiacao_solar\":\n            radiacaoSolar = parseFloat(mapValue(valorAD, outMin, outMax, inMin, inMax).toFixed(2));\n            break;\n        case \"Umidade_relativa_do_ar\":\n            umidadeRelativa = parseFloat(mapValue(valorAD, outMin, outMax, inMin, inMax).toFixed(2));\n            break;\n        case \"Temperatura_ambiente\":\n            temperaturaAmbiente = parseFloat(mapValue(valorAD, outMin, outMax, inMin, inMax).toFixed(2));\n            break;\n        case \"Vazao\":\n            vazao = parseFloat(mapValue(valorAD, outMin, outMax, inMin, inMax).toFixed(2));\n            break;\n    }\n}\n\n// Reestrutura o payload com os campos mapeados\nmsg.payload = {\n    \"field1\": umidadeSolo,\n    \"field2\": temperaturaSolo,\n    \"field3\": pHSolo,\n    \"field4\": nivelNutrientes,\n    \"field5\": radiacaoSolar,\n    \"field6\": umidadeRelativa,\n    \"field7\": temperaturaAmbiente,\n    \"field8\": vazao\n};\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 80,
+        "wires": [
+            [
+                "59959a6dac0f32f6",
+                "bfd9549b724286f8",
+                "7bdb31c8c87f8a66"
+            ]
+        ]
+    },
+    {
+        "id": "28a84479cbda7672",
+        "type": "http response",
+        "z": "f862a01cc17cd9bf",
+        "name": "",
+        "statusCode": "200",
+        "headers": {},
+        "x": 460,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "4e330f1b610f4841",
+        "type": "debug",
+        "z": "f862a01cc17cd9bf",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 460,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "59959a6dac0f32f6",
+        "type": "debug",
+        "z": "f862a01cc17cd9bf",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 700,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "06d936cbf6715a6c",
+        "type": "http response",
+        "z": "f862a01cc17cd9bf",
+        "name": "",
+        "statusCode": "200",
+        "headers": {},
+        "x": 820,
+        "y": 20,
+        "wires": []
+    },
+    {
+        "id": "b7f257b2a285268c",
+        "type": "template",
+        "z": "f862a01cc17cd9bf",
+        "name": "Template_HTML",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Dados do Sensor</title>\n    <meta http-equiv=\"refresh\" content=\"5\"> <!-- Atualiza a cada 5 segundos -->\n    <style>\n        body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; }\n        h1 { color: #007acc; text-align: center; }\n        .data-item { margin: 10px 0; padding: 10px; border-bottom: 1px solid #ddd; }\n    </style>\n</head>\n<body>\n    <h1>Dados do Sensor</h1>\n    <div class=\"data-item\">Umidade do Solo: <strong>{{payload.umidadeSolo}} %Vol</strong></div>\n    <div class=\"data-item\">Temperatura do Solo: <strong>{{payload.temperaturaSolo}} °C</strong></div>\n    <div class=\"data-item\">pH do Solo: <strong>{{payload.phSolo}} pH</strong></div>\n    <div class=\"data-item\">Nível de Nutrientes: <strong>{{payload.nivelNutrientes}} mg/Kg</strong></div>\n    <div class=\"data-item\">Radiação Solar: <strong>{{payload.radiacaoSolar}} umol</strong></div>\n    <div class=\"data-item\">Umidade Relativa do Ar: <strong>{{payload.umidadeRelativa}} %</strong></div>\n    <div class=\"data-item\">Temperatura Ambiente: <strong>{{payload.temperaturaAmbiente}} °C</strong></div>\n    <div class=\"data-item\">Vazão: <strong>{{payload.vazao}} L/min</strong></div>\n</body>\n</html>\n\n",
+        "output": "str",
+        "x": 780,
+        "y": 300,
+        "wires": [
+            [
+                "21c6457f48a96561"
+            ]
+        ]
+    },
+    {
+        "id": "bfd9549b724286f8",
+        "type": "function",
+        "z": "f862a01cc17cd9bf",
+        "name": "Salvar dados",
+        "func": "// Processar e salvar os dados\nflow.set(\"dadosSensor\", {\n    \"umidadeSolo\": msg.payload.field1,\n    \"temperaturaSolo\": msg.payload.field2,\n    \"phSolo\": msg.payload.field3,\n    \"nivelNutrientes\": msg.payload.field4,\n    \"radiacaoSolar\": msg.payload.field5,\n    \"umidadeRelativa\": msg.payload.field6,\n    \"temperaturaAmbiente\": msg.payload.field7,\n    \"vazao\": msg.payload.field8\n});\n\n// Retorna uma resposta de sucesso ao Python\nmsg.payload = { status: \"Dados recebidos com sucesso!\" };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 890,
+        "y": 80,
+        "wires": [
+            [
+                "03af9b12701cffd9"
+            ]
+        ]
+    },
+    {
+        "id": "03af9b12701cffd9",
+        "type": "debug",
+        "z": "f862a01cc17cd9bf",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1060,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "bbe8026994e7d75c",
+        "type": "http in",
+        "z": "f862a01cc17cd9bf",
+        "name": "",
+        "url": "/mostrar_dados",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 190,
+        "y": 300,
+        "wires": [
+            [
+                "34535f26877d71b6"
+            ]
+        ]
+    },
+    {
+        "id": "34535f26877d71b6",
+        "type": "function",
+        "z": "f862a01cc17cd9bf",
+        "name": "Recuperar dados",
+        "func": "// Recupera os dados salvos no contexto de fluxo\nmsg.payload = flow.get(\"dadosSensor\") || {};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 490,
+        "y": 300,
+        "wires": [
+            [
+                "b7f257b2a285268c",
+                "51bcf6ab68d5cde7"
+            ]
+        ]
+    },
+    {
+        "id": "21c6457f48a96561",
+        "type": "http response",
+        "z": "f862a01cc17cd9bf",
+        "name": "",
+        "statusCode": "200",
+        "headers": {},
+        "x": 1080,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "51bcf6ab68d5cde7",
+        "type": "debug",
+        "z": "f862a01cc17cd9bf",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 680,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "7bdb31c8c87f8a66",
+        "type": "http request",
+        "z": "f862a01cc17cd9bf",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://api.thingspeak.com/update?api_key=VOCTDAROG5RD5OQA",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 720,
+        "y": 160,
+        "wires": [
+            []
+        ]
+    }
+]
